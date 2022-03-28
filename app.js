@@ -1,22 +1,24 @@
+require('dotenv').config()
 const http = require('http');
 const WebSocketServer = require('websocket').server;
 const httpProxy = require('http-proxy');
 const proxy = httpProxy.createProxyServer({
-    target: 'http://localhost:8080',
+    target: 'localhost:8080',
     ws: true
 });
 const routes = require('./routes/root')
 const wsRoute = require('./websocket/root')
+console.log(process.env)
 
 server = http.createServer(async function (req, res) {
     if(req.url === '/eth_getBlock') await routes.eth_getBlock(req, res, proxy)
     else if(req.url === '/eth_getLogs') await routes.eth_getLogs(req, res, proxy)
     else if(req.url === '/eth_getTxReceipt') await routes.eth_getTxReceipt(req, res, proxy)
-    else proxy.web(req, res)
+    else proxy.web(req, res, {target: 'http://localhost:8080'})
 });
 
 server.listen(9000, function (){
-    console.log('server running')
+    console.log('Velas-proxy server running on port 9000')
 });
 
 wsServer = new WebSocketServer({
