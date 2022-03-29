@@ -1,27 +1,31 @@
-'use strict'
+let chai = require('chai');
+let chaiHttp = require('chai-http');
+let server = require('../../app');
+let {describe, it} = require("mocha");
+let bigTableUtils = require('../../bigtable/bigTableUtil')
 
-const { test } = require('tap')
-const { build } = require('../helper')
+chai.use(chaiHttp);
 
-test('default root.js route', async (t) => {
-  const app = await build(t)
-
-  const res = await app.inject({
-    url: '/'
-  })
-  t.same(JSON.parse(res.payload), { root: true })
+describe("bigTableUtils", function () {
+    describe("saveBlock", function () {
+        it("Should save bloc to bigTable", async function() {})
+    })
 })
 
-// inject callback style:
-//
-// test('default root.js route', (t) => {
-//   t.plan(2)
-//   const app = await build(t)
-//
-//   app.inject({
-//     url: '/'
-//   }, (err, res) => {
-//     t.error(err)
-//     t.same(JSON.parse(res.payload), { root.js: true })
-//   })
-// })
+describe('/POST eth_getBlock', () => {
+  it('it should save request for eth_getBlock', (done) => {
+    let payload = {
+      "id": 748957323232,
+      "type": true
+    }
+    chai.request(server)
+        .post('/eth_getBlock')
+        .send(payload)
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.be.a('object');
+          res.body.should.have.property('message').eql('Request saved');
+          done();
+        });
+  });
+});

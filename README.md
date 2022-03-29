@@ -1,23 +1,34 @@
-# Getting Started with Fastify-CLI [Fastify-CLI](https://www.npmjs.com/package/fastify-cli)
-This project was bootstrapped with Fastify-CLI.
+# VELAS proxy server
+This project is used to read and proxy requests.
 
 ## Available Scripts
 
 In the project directory, you can run:
 
-### `npm run dev`
-
-To start the app in dev mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
 ### `npm start`
 
-For production mode
+Open [http://localhost:9000](http://localhost:9000) to view it in the browser.
 
 ### `npm run test`
 
 Run the test cases.
 
-## Learn More
+## Used libraries
 
-To learn Fastify, check out the [Fastify documentation](https://www.fastify.io/docs/latest/).
+`http`, `axios`, `chai`, `chai-http`, `dotenv`, `http-proxy`, `mocha`, `websocket`
+
+## Run with docker
+
+In the project directory, you need to run:
+
+### `docker build ./`
+
+Build an image
+
+### `docker image ls`
+
+To list all images
+
+### `docker run IMAGE_ID`
+
+With proper IMAGE_ID from list

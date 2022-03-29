@@ -3,22 +3,21 @@ const http = require('http');
 const WebSocketServer = require('websocket').server;
 const httpProxy = require('http-proxy');
 const proxy = httpProxy.createProxyServer({
-    target: 'localhost:8080',
+    target: process.env.PROXY_HOST,
     ws: true
 });
 const routes = require('./routes/root')
 const wsRoute = require('./websocket/root')
-console.log(process.env)
 
 server = http.createServer(async function (req, res) {
     if(req.url === '/eth_getBlock') await routes.eth_getBlock(req, res, proxy)
     else if(req.url === '/eth_getLogs') await routes.eth_getLogs(req, res, proxy)
     else if(req.url === '/eth_getTxReceipt') await routes.eth_getTxReceipt(req, res, proxy)
-    else proxy.web(req, res, {target: 'http://localhost:8080'})
+    else proxy.web(req, res, {target: process.env.PROXY_WEB_HOST})
 });
 
-server.listen(9000, function (){
-    console.log('Velas-proxy server running on port 9000')
+server.listen(process.env.SERVER_PORT, function (){
+    console.log('Velas-proxy server running on port ' + process.env.SERVER_PORT)
 });
 
 wsServer = new WebSocketServer({
@@ -40,7 +39,7 @@ wsServer.on('request', async function(request) {
     });
 });
 
-
+module.exports = server
 //---------------------------------------------------testing proxy server----------------------------------------------
 server2 = http.createServer(async function (req, res) {
     console.log('received')

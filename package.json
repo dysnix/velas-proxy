@@ -1,13 +1,13 @@
 {
   "name": "velas-proxy",
   "version": "1.0.0",
-  "description": "This project was bootstrapped with Fastify-CLI.",
+  "description": "Velas proxy server",
   "main": "app.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "tap \"test/**/*.test.js\"",
+    "test": "mocha 'test/**/*.test.js'",
     "start": "node app.js"
   },
   "keywords": [],
@@ -17,9 +17,12 @@
     "@google-cloud/bigtable": "^3.9.2",
     "axios": "^0.26.1",
     "body-parser": "^1.19.2",
+    "chai": "^4.3.6",
+    "chai-http": "^4.3.0",
     "dotenv": "^16.0.0",
     "http": "^0.0.1-security",
     "http-proxy": "^1.18.1",
+    "mocha": "^9.2.2",
     "websocket": "^1.0.34"
   },
   "devDependencies": {

@@ -25,15 +25,8 @@ async function readLog () {
     let bigtable = new Bigtable();
     let instance = bigtable.instance(process.env.GOOGLE_BIGTABLE_INSTANCE_ID);
     let table = instance.table(process.env.GOOGLE_BIGTABLE_LOGS_TABLE_ID);
-    let filter = [
-        {
-            column: {
-                cellLimit: 1
-            },
-        },
-    ]
-    let [allRows] = await table.getRows({filter});
-    return allRows;
+    let stream = await table.createReadStream();
+    return stream
 }
 
 async function checkRequestTime (id) {
