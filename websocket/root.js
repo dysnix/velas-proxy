@@ -1,5 +1,6 @@
-const bigTable = require('../bigtable/bigTableUtil')
+const bigTable = require('../utils/bigTableUtil')
 const axios = require("axios");
+const {proxyWebsocket} = require('../utils/proxy')
 
 async function eth_getBlock (message, request, socket, head, proxy) {
     let connection = request.accept()
@@ -10,14 +11,15 @@ async function eth_getBlock (message, request, socket, head, proxy) {
             await bigTable.saveBlock(body.params);
             connection.sendUTF('Request saved!');
         }
-        else proxy.ws(request, socket, head, { target: process.env.PROXY_HOST, ws: true });
+        else
+            await proxyWebsocket(request, socket, head, proxy);
     } catch (e) {
         console.log((new Date()) + '/eth_getBlock webSocket error ' + e.message)
         connection.sendUTF('Error: ' + e.message);
     }
 }
 
-async function eth_getLogs (message, request, socket, head, proxy) {
+async function eth_getLogs (message, request) {
     let connection = request.accept()
     try {
         let body = JSON.parse(message);
@@ -45,7 +47,8 @@ async function eth_getTxReceipt (message, request, socket, head, proxy) {
             await bigTable.saveLog(body.params);
             connection.sendUTF('Request saved!');
         }
-        else proxy.ws(request, socket, head, { target: process.env.PROXY_HOST, ws: true });
+        else
+            await proxyWebsocket(request, socket, head, proxy);
     } catch (e) {
         console.log((new Date()) + '/eth_getTxReceipt webSocket error ' + e.message)
         connection.sendUTF('Error: ' + e.message);

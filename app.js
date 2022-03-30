@@ -8,12 +8,29 @@ const proxy = httpProxy.createProxyServer({
 });
 const routes = require('./routes/root')
 const wsRoute = require('./websocket/root')
+const { validateWsMessage, validateWebRequest } = require('./utils/validator');
 
 server = http.createServer(async function (req, res) {
-    if(req.url === '/eth_getBlock') await routes.eth_getBlock(req, res, proxy)
-    else if(req.url === '/eth_getLogs') await routes.eth_getLogs(req, res, proxy)
-    else if(req.url === '/eth_getTxReceipt') await routes.eth_getTxReceipt(req, res, proxy)
-    else proxy.web(req, res, {target: process.env.PROXY_WEB_HOST})
+    let bodyStr = "";
+    let body = {};
+    req.on("data", async (chunk) => {
+        try {
+            bodyStr += chunk;
+            body = JSON.parse(bodyStr);
+            if(await validateWebRequest(req, res, body)) {
+                console.log(new Date() + ' web request claimed')
+                if(body.method === 'eth_getBlock') await routes.eth_getBlock(req, res, proxy, body)
+                else if(body.method === 'eth_getLogs') await routes.eth_getLogs(req, res, proxy, body)
+                else if(body.method === 'eth_getTxReceipt') await routes.eth_getTxReceipt(req, res, proxy, body)
+                else proxy.web(req, res, {target: process.env.PROXY_WEB_HOST})
+            }
+        } catch (e) {
+            console.error(new Date() + 'request error: ' +  e.message)
+            console.error(e.stack)
+            res.writeHead(500)
+            res.end(e.message)
+        }
+    });
 });
 
 server.listen(process.env.SERVER_PORT, function (){
@@ -28,10 +45,13 @@ wsServer = new WebSocketServer({
 wsServer.on('request', async function(request) {
     let connection = request.accept();
     connection.on('message', async function(message) {
-        if(request.resource === '/eth_getBlock') await wsRoute.eth_getBlock(message, request, request.socket, request.httpRequest.rawHeaders, proxy)
-        else if(request.resource === '/eth_getLogs') await wsRoute.eth_getLogs(connection)
-        else if(request.resource === '/eth_getTxReceipt') await wsRoute.eth_getTxReceipt(connection)
-        else proxy.ws(request, request.socket, request.httpRequest.rawHeaders)
+        let body = JSON.parse(message);
+        if(await validateWsMessage(connection, body)) {
+            if(body.method === 'eth_getBlock') await wsRoute.eth_getBlock(message, request, request.socket, request.httpRequest.rawHeaders, proxy)
+            else if(body.method === 'eth_getLogs') await wsRoute.eth_getLogs(message, request)
+            else if(body.method === 'eth_getTxReceipt') await wsRoute.eth_getTxReceipt(message, request, request.socket, request.httpRequest.rawHeaders, proxy)
+            else proxy.ws(request, request.socket, request.httpRequest.rawHeaders)
+        }
     })
     console.log((new Date()) + ' Connection accepted.');
     connection.on('close', function(reasonCode, description) {
@@ -40,31 +60,3 @@ wsServer.on('request', async function(request) {
 });
 
 module.exports = server
-//---------------------------------------------------testing proxy server----------------------------------------------
-server2 = http.createServer(async function (req, res) {
-    console.log('received')
-    res.writeHead(200);
-    res.end('All good')
-})
-wsServer2 = new WebSocketServer({
-    httpServer: server2,
-    autoAcceptConnections: false
-})
-wsServer2.on('request', function(request) {
-    let connection = request.accept();
-    console.log((new Date()) + ' Connection accepted.');
-    connection.on('message', function(message) {
-        if (message.type === 'utf8') {
-            console.log('Received Message: ' + message.utf8Data);
-            connection.sendUTF(message.utf8Data);
-        }
-        else if (message.type === 'binary') {
-            console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
-            connection.sendBytes(message.binaryData);
-        }
-    });
-    connection.on('close', function(reasonCode, description) {
-        console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
-    });
-});
-server2.listen(8080)
