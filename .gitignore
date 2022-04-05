@@ -30,7 +30,8 @@ build/Release
 node_modules
 jspm_packages
 package-lock.json
-big-table-creds.json
+service-account-file.json
+google-application-credentials.json
 
 # Optional npm cache directory
 .npm
