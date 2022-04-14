@@ -1,9 +1,9 @@
 async function proxyRequest(req, reply, proxy) {
-    await proxy.web(req, reply, { target: process.env.PROXY_WEB_HOST, secure: false });
+    await proxy.web(req, reply, { target: process.env.PROXY_WEB_HOST, secure: false, prependPath: false, changeOrigin: true });
 }
 
 async function proxyWebsocket(request, socket, head, proxy) {
-    proxy.ws(request, socket, head, { target: process.env.PROXY_HOST, ws: true, secure: false });
+    proxy.ws(request, socket, head, { target: process.env.PROXY_HOST, ws: true, secure: false, prependPath: false });
 }
 
-module.exports = {proxyRequest, proxyWebsocket}
+module.exports = { proxyRequest, proxyWebsocket }

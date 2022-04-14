@@ -10,6 +10,8 @@ of project directory you should use full path to file
 
 ## All steps to run project on local
 
+### Please define correct `NODE_ENV` property in .env file. `production` or `development` supported. `development` by default
+
 1) Add google-application-credentials.json
 
 2) `npm install` to install all dependencies from package.json
@@ -67,26 +69,4 @@ With proper IMAGE_ID from list
 
 ### NOTE: for Docker build you need to set up google-application-credentials.json in project. See above
 
-## NOTE: to run server over https paste this block of code instead http in app.js file
-
-```
-const https = require('https');
-const fs = require('fs');
-const options = {
-    key: fs.readFileSync('./key.pem'), //path to key.pem file
-    cert: fs.readFileSync('./cert.pem') //path to cert.pem file
-};
-
-https.createServer(options, function (req, res) {
-    //handling code here: 
-    //let bodyStr = "";
-    //...
-}).listen(process.env.SECURE_SERVER_PORT);
-
-// Redirect from http port 9000 to https
-var http = require('http');
-http.createServer(function (req, res) {
-    res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
-    res.end();
-}).listen(process.env.SERVER_PORT);
-```
+## IMPORTANT!!! To run server over https please define correct path to key.pem and cert.pem files in constants.js file in root folder of the project
