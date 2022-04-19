@@ -10,7 +10,8 @@ of project directory you should use full path to file
 
 ## All steps to run project on local
 
-### Please define correct `NODE_ENV` property in .env file. `production` or `development` supported. `development` by default
+### Please define correct `USE_SSL` property in .env file. `use` or `no` supported. `no` by default
+### Also `PERIOD` is need to define in .env file. 14 days by default
 
 1) Add google-application-credentials.json
 
@@ -18,7 +19,7 @@ of project directory you should use full path to file
 
 3) `npm start` to run project. It will be available on [http://localhost:9000](http://localhost:9000)
 
-After this you can call jsonrpc requests for eth_getBlock, eth_getLogs, eth_getTxReceipt.
+After this you can call jsonrpc requests for eth_getBlock*(eth_getBlockByHash, eth_getBlockByNumber, eth_getBlockTransactionCountByHash, eth_getBlockTransactionCountByNumber), eth_getLogs, eth_getTxReceipt.
 Also these methods available for websocket connections
 
 For deployment process use Docker section from README.md
@@ -46,10 +47,6 @@ Run the test cases.
 `/POST eth_getBlock reject - should return 400 for eth_getBlock`
 
 `/POST eth_getLogs - should check logs in bigTable and on server`
-
-## Used libraries
-
-`http`, `axios`, `chai`, `chai-http`, `dotenv`, `http-proxy`, `mocha`, `websocket`
 
 ## Run with docker
 
