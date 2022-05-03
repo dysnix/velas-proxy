@@ -10,36 +10,44 @@ let axios = require('axios')
 let assert = require('assert').strict;
 chai.use(chaiHttp);
 
-describe('/POST eth_getBlock save', () => {
-  it('it should save request for eth_getBlock', (done) => {
-      bigTableUtils.saveBlock = jest.fn().mockReturnValue();
+describe('/POST eth_getBlockByNumber bigTable read', () => {
+  it('it should read data from BigTable for eth_getBlockByNumber', (done) => {
       let payload = {
           "jsonrpc": "2.0",
-          "id": 748957323232,
-          "method": "eth_getBlock"
+          "id": 1,
+          "method": "eth_getBlockByNumber",
+          "params":[
+              "0x1955", true
+          ]
     }
     chai.request(server)
         .post('/')
         .send(payload)
         .end((err, res) => {
-            assert.equal(res.text, '{"message":"Request saved"}')
+            assert.equal(res.text, '{"jsonrpc":"2,0","error":"Unknown row: 0000000000001955.","id":1}')
             assert.equal(res.status, 200)
           done();
         });
   });
 });
 
-describe('/POST eth_getBlock proxy', () => {
-    it('it should proxy request for eth_getBlock', (done) => {
+describe('/POST eth_getBlockByNumber proxy', () => {
+    it('it should proxy request for eth_getBlockByNumber', (done) => {
+        bigTableUtils.checkRequestTime = jest.fn().mockImplementation((blockNumber) => { return false });
         proxy.proxyRequest = jest.fn().mockImplementation((req, reply, proxy) => {
             reply.writeHead(200)
             reply.end(JSON.stringify({message: 'Request proxied'}))
         });
         let payload = {
-            "jsonrpc": "2.0",
-            "id": 7489573,
-            "method": "eth_getBlock"
+            "jsonrpc":"2.0",
+            "method":"eth_getBlockByNumber",
+            "params":[
+                "0x2065d38",
+                true
+            ],
+            "id":1
         }
+
         chai.request(server)
             .post('/')
             .send(payload)
@@ -51,45 +59,15 @@ describe('/POST eth_getBlock proxy', () => {
     });
 })
 
-describe('/POST eth_getBlock reject', () => {
-    it('it should return 400 for eth_getBlock' +
+describe('/POST eth_getBlockByNumber reject', () => {
+    it('it should return 400 for eth_getBlockByNumber' +
         '', (done) => {
-        bigTableUtils.saveBlock = jest.fn().mockReturnValue();
         let payload = {}
         chai.request(server)
             .post('/')
             .send(payload)
             .end((err, res) => {
                 assert.equal(res.status, 400)
-                done();
-            });
-    });
-})
-
-describe('/POST eth_getLogs', () => {
-    it('it should check logs in bigTable and on server', (done) => {
-        bigTableUtils.readLog = jest.fn().mockImplementation(() => {
-            let Readable = require('stream').Readable
-            let s = new Readable({objectMode: true})
-            s.push({data: {x: "Value from bigTable"}})
-            s.push(null)
-            return s
-        });
-        bigTableUtils.saveBlock = jest.fn().mockReturnValue();
-        let mock = new MockAdapter(axios);
-        mock.onPost(process.env.PROXY_WEB_HOST).reply(200, 'Value from server');
-        let payload = {
-            "jsonrpc": "2.0",
-            "id": 7489573,
-            "method": "eth_getLogs"
-        }
-        chai.request(server)
-            .post('/')
-            .send(payload)
-            .end((err, res) => {
-                assert.equal(res.status, 200)
-                let response = JSON.parse(res.text)
-                assert.equal(2, response.length)
                 done();
             });
     });

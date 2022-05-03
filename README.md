@@ -40,13 +40,11 @@ Open [http://localhost:9000](http://localhost:9000) to view it in the browser.
 
 Run the test cases.
 
-`/POST eth_getBlock save - should save request for eth_getBlock`
+`/POST eth_getBlockByNumber bigTable read - should read data from BigTable for eth_getBlockByNumber`
 
-`/POST eth_getBlock proxy - should proxy request for eth_getBlock`
+`/POST eth_getBlockByNumber proxy - should proxy request for eth_getBlockByNumber`
 
-`/POST eth_getBlock reject - should return 400 for eth_getBlock`
-
-`/POST eth_getLogs - should check logs in bigTable and on server`
+`/POST eth_getBlockByNumber reject - should return 400 for eth_getBlockByNumber`
 
 ## Run with docker
 

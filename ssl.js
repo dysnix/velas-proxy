@@ -6,8 +6,8 @@ const { proxyOptions, httpsOptions } = require('./constants.js')
 const proxy = httpProxy.createProxyServer(proxyOptions);
 const { handleProxyRequest, handleError} = require('./utils/proxy')
 const { validateWsMessage, validateWebRequest } = require('./utils/validator');
-const routes = require('./routes/root')
-const wsRoute = require('./websocket/root')
+const { handleWeb } = require('./routes/root')
+const { handleWS } = require('./websocket/root')
 
 server = https.createServer(httpsOptions, function (req, res) {
     let bodyStr = "";
@@ -18,13 +18,7 @@ server = https.createServer(httpsOptions, function (req, res) {
         try {
             if(await validateWebRequest(req, res, body)) {
                 console.log(new Date() + ' web request claimed')
-                if(body.method === 'eth_getBlockByHash') await routes.eth_getBlockByHash(req, res, proxy, body)
-                else if(body.method === 'eth_getBlockByName') await routes.eth_getBlockByName(req, res, proxy, body)
-                else if(body.method === 'eth_getBlockTransactionCountByHash') await routes.eth_getBlockTransactionCountByHash(req, res, proxy, body)
-                else if(body.method === 'eth_getBlockTransactionCountByNumber') await routes.eth_getBlockTransactionCountByNumber(req, res, proxy, body)
-                else if(body.method === 'eth_getLogs') await routes.eth_getLogs(req, res, proxy, body)
-                else if(body.method === 'eth_getTxReceipt') await routes.eth_getTxReceipt(req, res, proxy, body)
-                else proxy.web(req, res, { target: process.env.PROXY_WEB_HOST })
+                await handleWeb(req, res, proxy, body);
                 handleProxyRequest(proxy, res, bodyStr)
                 handleError(proxy, res)
             }
@@ -38,7 +32,7 @@ server = https.createServer(httpsOptions, function (req, res) {
 });
 
 // Redirect from http port 9000 to https
-var http = require('http');
+const http = require('http');
 http.createServer(function (req, res) {
     res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
     res.end();
@@ -54,14 +48,8 @@ wsServer.on('request', async function(request) {
     let connection = request.accept();
     connection.on('message', async function(message) {
         let body = JSON.parse(message);
-        if(await validateWsMessage(connection, body)) {
-            if(body.method === 'eth_getBlockByHash') await wsRoute.eth_getBlockByHash(message, request, request.socket, request.httpRequest.rawHeaders, proxy)
-            else if(body.method === 'eth_getBlockByNumber') await wsRoute.eth_getBlockByName(message, request, request.socket, request.httpRequest.rawHeaders, proxy)
-            else if(body.method === 'eth_getBlockTransactionCountByHash') await wsRoute.eth_getBlockTransactionCountByHash(message, request, request.socket, request.httpRequest.rawHeaders, proxy)
-            else if(body.method === 'eth_getBlockTransactionCountByNumber') await wsRoute.eth_getBlockTransactionCountByNumber(message, request, request.socket, request.httpRequest.rawHeaders, proxy)
-            else if(body.method === 'eth_getLogs') await wsRoute.eth_getLogs(message, request, request.socket, request.httpRequest.rawHeaders, proxy)
-            else if(body.method === 'eth_getTxReceipt') await wsRoute.eth_getTxReceipt(message, request, request.socket, request.httpRequest.rawHeaders, proxy)
-            else proxy.ws(request, request.socket, request.httpRequest.rawHeaders, { target: process.env.PROXY_HOST, ws: true, secure: false })        }
+        if(await validateWsMessage(connection, body))
+            await handleWS(body, message, request, request.socket, request.httpRequest.rawHeaders, proxy)
     })
     console.log((new Date()) + ' Connection accepted.');
     connection.on('close', function(reasonCode, description) {

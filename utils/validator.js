@@ -4,7 +4,7 @@ async function validateWebRequest(req, reply, body) {
         reply.end("Request should be POST or OPTIONS!")
         return false
     }
-    if(!body.jsonrpc && !body.id) {
+    if(!body.jsonrpc || !body.id) {
         reply.writeHead(400)
         reply.end("Request should be a valid jsonrpc request!")
         return false
@@ -13,11 +13,11 @@ async function validateWebRequest(req, reply, body) {
 }
 
 async function validateWsMessage(connection, message) {
-    if(!message.jsonrpc && !message.id) {
+    if(!message.jsonrpc || !message.id) {
         connection.sendUTF('Message should be a valid jsonrpc request!');
         return false
     }
     return true
 }
 
-module.exports = {validateWsMessage, validateWebRequest}
+module.exports = { validateWsMessage, validateWebRequest }
