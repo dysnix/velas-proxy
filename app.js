@@ -1,6 +1,7 @@
 require('dotenv').config()
 const ssl = process.env.USE_SSL
 
+Promise.all([require('./utils/bigTableUtil').refreshCashedBlockNumber()]).then()
 if(ssl === 'use') {
     server = require('./ssl')
     server.listen(process.env.SECURE_SERVER_PORT, function () {

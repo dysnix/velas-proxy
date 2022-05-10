@@ -6,6 +6,10 @@ async function proxyRequestNoHandle(req, reply, proxy) {
     await proxy.web(req, reply, { target: process.env.PROXY_WEB_HOST });
 }
 
+async function proxyRequestToTarget(req, reply, proxy, targetHost) {
+    await proxy.web(req, reply, { target: targetHost });
+}
+
 async function proxyWebsocket(request, socket, head, proxy) {
     proxy.ws(request, socket, head, { target: process.env.PROXY_HOST, ws: true, selfHandleResponse : true  });
 }
@@ -31,4 +35,4 @@ function handleProxyRequest(proxy, res, body) {
     });
 }
 
-module.exports = { proxyRequest, proxyWebsocket, proxyRequestNoHandle, proxyWebsocketNoHandle, handleError, handleProxyRequest }
+module.exports = { proxyRequest, proxyWebsocket, proxyRequestNoHandle, proxyWebsocketNoHandle, handleError, handleProxyRequest, proxyRequestToTarget }

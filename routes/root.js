@@ -2,14 +2,19 @@ const bigTable = require('../utils/bigTableUtil.js');
 const proxyUtil = require('../utils/proxy');
 
 async function handleWeb(req, res, proxy, body) {
-    switch (body.method) {
-        case 'eth_getBlockByHash': await eth_getBlockByHash(req, res, proxy, body); break;
-        case 'eth_getBlockByNumber': await eth_getBlockByNumber(req, res, proxy, body); break;
-        case 'eth_getBlockTransactionCountByHash': await eth_getBlockTransactionCountByHash(req, res, proxy, body); break;
-        case 'eth_getBlockTransactionCountByNumber': await eth_getBlockTransactionCountByNumber(req, res, proxy, body); break;
-        case 'eth_getLogs': await eth_getLogs(req, res, proxy, body); break;
-        case 'eth_getTransactionReceipt': await eth_getTxReceipt(req, res, proxy, body); break;
-        default: proxy.web(req, res, { target: process.env.PROXY_WEB_HOST });
+    try {
+        switch (body.method) {
+            case 'eth_getBlockByHash': await eth_getBlockByHash(req, res, proxy, body); break;
+            case 'eth_getBlockByNumber': await eth_getBlockByNumber(req, res, proxy, body); break;
+            case 'eth_getBlockTransactionCountByHash': await eth_getBlockTransactionCountByHash(req, res, proxy, body); break;
+            case 'eth_getBlockTransactionCountByNumber': await eth_getBlockTransactionCountByNumber(req, res, proxy, body); break;
+            case 'eth_getLogs': await eth_getLogs(req, res, proxy, body); break;
+            case 'eth_getTransactionReceipt': await eth_getTxReceipt(req, res, proxy, body); break;
+            default: proxy.web(req, res, { target: process.env.PROXY_WEB_HOST });
+        }
+    } catch (e) {
+        console.error(e.stack)
+        res.end(JSON.stringify(buildErrorJsonrpcObject(e.message, body.id)))
     }
 }
 
@@ -66,7 +71,7 @@ async function eth_getTxReceipt (req, reply, proxy, body) {
 
 async function mapDataFromBigTableOrProxyRequest(data, body, req, reply, proxy) {
     if(Object.entries(data).length !== 0) reply.end(JSON.stringify(mapResultToJsonrpcObject(data, body.id)));
-    else await proxyUtil.proxyRequest(req, reply, proxy);
+    else await proxyUtil.proxyRequestToTarget(req, reply, proxy, process.env.PROXY_WEB_HOST ? process.env.PROXY_WEB_HOST : process.env.DEFAULT_WEB_HOST);
 }
 
 function mapResultToJsonrpcObject(result, id) {

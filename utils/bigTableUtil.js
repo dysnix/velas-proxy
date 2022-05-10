@@ -3,6 +3,7 @@ const protobuf = require('protobufjs');
 const bzip2 = require('bz2');
 const { ungzip } = require('node-gzip');
 const { decompress } = require('@xingrz/cppzst');
+let cashedBlockNumber;
 
 async function readBlockFromBigTable (filter, tableId) {
     console.log(`Read EvmFullBlock from BigTable for block ${filter}`)
@@ -27,7 +28,7 @@ async function readReceiptFromBigTable (id) {
 }
 
 async function readLogFromBigTable (filterObject) {
-    console.log(`Read Log from BigTable for hash ${id}`)
+    console.log(`Read Log from BigTable by filter ${filterObject}`)
     let bigtable = new Bigtable();
     let instance = bigtable.instance(process.env.GOOGLE_BIGTABLE_INSTANCE_ID);
     let table = instance.table(process.env.GOOGLE_BIGTABLE_LOGS_TABLE_ID);
@@ -41,10 +42,24 @@ async function readLogFromBigTable (filterObject) {
 }
 
 async function checkRequestTime (blockNumber) {
+    Promise.all([refreshCashedBlockNumber()]).then()
     let blockNumberInInt = parseInt(blockNumber, 16)
-    let createdTime = blockNumberInInt * 0.4;
+    let createdTime = (cashedBlockNumber * 0.4) - (blockNumberInInt * 0.4);
     let d = Math.floor(createdTime / (3600*24));
-    return d < process.env.PERIOD;
+    return process.env.DEFAULT_WEB_HOST ? true : d > process.env.PERIOD;
+}
+
+async function refreshCashedBlockNumber() {
+    let host = process.env.PROXY_WEB_HOST ? process.env.PROXY_WEB_HOST : process.env.DEFAULT_WEB_HOST = "https://evmexplorer.velas.com/rpc"
+
+    let body = {
+        id: "1",
+        method: "eth_blockNumber",
+        jsonrpc: "2.0"
+    }
+    require('axios').post(host, body).then(data => {
+        cashedBlockNumber = parseInt(data.data.result, 16);
+    })
 }
 
 async function getLogsFilter(filterObject) {
@@ -130,4 +145,4 @@ async function decompressData(buffer) {
     return result;
 }
 
-module.exports = { readBlockFromBigTable, readReceiptFromBigTable, readLogFromBigTable, checkRequestTime }
+module.exports = { readBlockFromBigTable, readReceiptFromBigTable, readLogFromBigTable, checkRequestTime, refreshCashedBlockNumber }
