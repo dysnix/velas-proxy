@@ -28,17 +28,12 @@ async function readReceiptFromBigTable (id) {
 }
 
 async function readLogFromBigTable (filterObject) {
-    console.log(`Read Log from BigTable by filter ${filterObject}`)
+    console.log(`Read Log from BigTable by filter start with ${filterObject[0].fromBlock} end on ${filterObject[0].toBlock }`)
     let bigtable = new Bigtable();
     let instance = bigtable.instance(process.env.GOOGLE_BIGTABLE_INSTANCE_ID);
     let table = instance.table(process.env.GOOGLE_BIGTABLE_LOGS_TABLE_ID);
     let filter = await getLogsFilter(filterObject);
-    let [row] = await table.getRows({
-        limit: 1,
-        filter
-    });
-    let value = readLog(row.data.x.proto)
-    return await readTxBlock(value);
+    return table.createReadStream(filter);
 }
 
 async function checkRequestTime (blockNumber) {
@@ -63,31 +58,9 @@ async function refreshCashedBlockNumber() {
 }
 
 async function getLogsFilter(filterObject) {
-    let filter = {
-        column: {
-            family: filterObject.address,
-        }
-    }
-    if(filterObject.blockhash) {
-        filter.column = filterObject.blockhash;
-    } else {
-        filter.column.start = filterObject.fromBlock;
-        filter.column.end.value = filterObject.toBlock;
-    }
-    if(filterObject.topics) {
-        for(let topic of filterObject.topics) {
-            if(!Array.isArray(topic)) {
-                filter.interleave = [
-                    {
-                        value: topic,
-                    },
-                    {column: 'topic'},
-                ]
-            }
-        }
-    }
-
-    return filter
+    let start = filterObject[0].fromBlock;
+    let end = filterObject[0].toBlock;
+    return { start, end }
 }
 
 function readRow(rowArray) {
@@ -145,4 +118,4 @@ async function decompressData(buffer) {
     return result;
 }
 
-module.exports = { readBlockFromBigTable, readReceiptFromBigTable, readLogFromBigTable, checkRequestTime, refreshCashedBlockNumber }
+module.exports = { readBlockFromBigTable, readReceiptFromBigTable, readLogFromBigTable, checkRequestTime, refreshCashedBlockNumber, readLog }

@@ -51,8 +51,27 @@ async function eth_getBlockTransactionCountByNumber (message, request, socket, h
 }
 
 async function eth_getLogs (message, request, socket, head, proxy) {
-    console.log(new Date() + ' web socket request proxied')
-    await proxyUtil.proxyWebsocketNoHandle(request, socket, head, proxy);
+    let connection = request.accept()
+    try {
+        if (await bigTable.checkRequestTime(message.params[0].fromBlock) && await bigTable.checkRequestTime(message.params[0].toBlock)) {
+            let stream = await bigTable.readLogFromBigTable(message.params);
+            let result = []
+            stream.on('error', err => {
+                console.error(`Error on retrieving data from bigtable ${err.message}`);
+                connection.sendUTF(JSON.stringify(buildErrorJsonrpcObject(err.message, message.id)))
+            }).on('data', row => {
+                result.push(bigTable.readLog(row.data.x.proto))
+            }).on('end', async () => {
+                await mapDataFromBigTableOrProxyRequest(result, message, request, socket, head, proxy, connection)
+            });
+        } else {
+            console.log(new Date() + ' web socket request proxied')
+            await proxyUtil.proxyWebsocketNoHandle(request, socket, head, proxy);
+        }
+    } catch (e) {
+        console.error(e.stack)
+        connection.sendUTF(JSON.stringify(buildErrorJsonrpcObject(err.message, message.id)))
+    }
 }
 
 async function eth_getTxReceipt (message, request, socket, head, proxy) {

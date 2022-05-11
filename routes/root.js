@@ -55,8 +55,26 @@ async function eth_getBlockTransactionCountByNumber (req, reply, proxy, body) {
 }
 
 async function eth_getLogs (req, reply, proxy, body) {
-    console.log(`${new Date()} web request proxied for ${body.params[0]}`)
-    await proxyUtil.proxyRequestNoHandle(req, reply, proxy);
+    try {
+        if (await bigTable.checkRequestTime(body.params[0].fromBlock) && await bigTable.checkRequestTime(body.params[0].toBlock)) {
+            let stream = await bigTable.readLogFromBigTable(body.params);
+            let result = []
+            stream.on('error', err => {
+                console.error(`Error on retrieving data from bigtable ${err.message}`);
+                reply.end(JSON.stringify(buildErrorJsonrpcObject(err.message, body.id)))
+            }).on('data', row => {
+                result.push(bigTable.readLog(row.data.x.proto))
+            }).on('end', async () => {
+                await mapDataFromBigTableOrProxyRequest(result, body, req, reply, proxy)
+            });
+        } else {
+            console.log(`${new Date()} web request proxied start from ${body.params[0].fromBlock} end on ${body.params[0].toBlock }`)
+            await proxyUtil.proxyRequestNoHandle(req, reply, proxy);
+        }
+    } catch (e) {
+        console.error(e.stack)
+        reply.end(JSON.stringify(buildErrorJsonrpcObject(err.message, body.id)))
+    }
 }
 
 async function eth_getTxReceipt (req, reply, proxy, body) {
