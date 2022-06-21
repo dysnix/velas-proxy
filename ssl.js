@@ -20,13 +20,26 @@ server = https.createServer(httpsOptions, function (req, res) {
                 console.log(new Date() + ' web request claimed')
                 await handleWeb(req, res, proxy, body);
                 handleProxyRequest(proxy, res, bodyStr)
-                handleError(proxy, res)
+                handleError(proxy, res, body)
             }
         } catch (e) {
-            console.error(new Date() + 'request error: ' +  e.message)
+            console.error(`${body.method} ${new Date()} request error: ${e.message}`)
             console.error(e.stack)
+            try{
+                res.writeHead(502)
+                res.end(JSON.stringify({message: e.message}))
+            } catch (e) {
+                console.error(`${body.method} response socket already closed!`)
+                res.end();
+            }
+        }
+    });
+    req.on("error", (e) => {
+        if(res.headersSent || res.socket.destroyed) {
+            res.end();
+        } else {
             res.writeHead(500)
-            res.end(e.message)
+            res.end(JSON.stringify({message: e.message}))
         }
     });
 });
