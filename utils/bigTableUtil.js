@@ -1,3 +1,4 @@
+'use strict'
 const { Bigtable } = require('@google-cloud/bigtable');
 const protobuf = require('protobufjs');
 const bzip2 = require('bz2');
@@ -55,6 +56,7 @@ async function refreshCashedBlockNumber() {
     require('axios').post(host, body).then(data => {
         cashedBlockNumber = parseInt(data.data.result, 16);
     })
+    body = null; host = null;
 }
 
 async function getLogsFilter(filterObject) {
@@ -114,8 +116,8 @@ async function decompressData(buffer) {
     try { result = await decompress(buffer); } catch (e) { console.log('Failed decompression with zst. Trying gzip...'); }
     if(!result) try { result = await ungzip(buffer); } catch (e) { console.log('Failed decompression with gzip. Trying bz2...'); }
     if(!result) try { result = bzip2.decompress(buffer); } catch (e) { console.log('Failed decompression with bz2. Uncompressed value'); }
-    if(!result) result = buffer;
-    return result;
+    if(!result) return buffer
+    else return result;
 }
 
 module.exports = { readBlockFromBigTable, readReceiptFromBigTable, readLogFromBigTable, checkRequestTime, refreshCashedBlockNumber, readLog }

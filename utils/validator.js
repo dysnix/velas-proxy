@@ -1,3 +1,4 @@
+'use strict'
 async function validateWebRequest(req, reply, body) {
     if(req.method !== "POST" && req.method !== "OPTIONS") {
         reply.writeHead(400)

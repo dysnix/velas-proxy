@@ -1,3 +1,4 @@
+'use strict'
 const bigTable = require('../utils/bigTableUtil.js');
 const proxyUtil = require('../utils/proxy');
 
@@ -34,6 +35,7 @@ async function eth_getBlockByNumber (req, reply, proxy, body) {
             let id = '0'.repeat(16 - body.params[0].replaceAll('0x', '').length).concat(body.params[0].replaceAll('0x', ''))
             let data = await bigTable.readBlockFromBigTable(id, process.env.GOOGLE_BIGTABLE_BLOCK_TABLE_ID);
             await mapDataFromBigTableOrProxyRequest(data, body, req, reply, proxy)
+            id = null
         } else {
             console.log(`${new Date()} web request proxied for ${body.params[0]}`)
             await proxyUtil.proxyRequest(req, reply, proxy);
@@ -67,6 +69,7 @@ async function eth_getLogs (req, reply, proxy, body) {
             }).on('end', async () => {
                 await mapDataFromBigTableOrProxyRequest(result, body, req, reply, proxy)
             });
+            stream.destroy()
         } else {
             console.log(`${new Date()} web request proxied start from ${body.params[0].fromBlock} end on ${body.params[0].toBlock }`)
             await proxyUtil.proxyRequestNoHandle(req, reply, proxy);
@@ -90,6 +93,7 @@ async function eth_getTxReceipt (req, reply, proxy, body) {
 async function mapDataFromBigTableOrProxyRequest(data, body, req, reply, proxy) {
     if(Object.entries(data).length !== 0) reply.end(JSON.stringify(mapResultToJsonrpcObject(data, body.id)));
     else await proxyUtil.proxyRequestToTarget(req, reply, proxy, process.env.PROXY_WEB_HOST ? process.env.PROXY_WEB_HOST : process.env.DEFAULT_WEB_HOST);
+    data = {} = null
 }
 
 function mapResultToJsonrpcObject(result, id) {

@@ -1,3 +1,4 @@
+'use strict'
 async function proxyRequest(req, reply, proxy) {
     await proxy.web(req, reply, { target: process.env.PROXY_WEB_HOST });
 }
