@@ -19,19 +19,6 @@ async function proxyWebsocketNoHandle(request, socket, head, proxy) {
     proxy.ws(request, socket, head, { target: process.env.PROXY_HOST, ws: true  });
 }
 
-function handleError(proxy, res, body) {
-    proxy.on('error', (e) => {
-        console.error(`Error when proxy request ${body.method}: ${e.message}`)
-        try {
-            res.writeHead(502)
-            res.end(JSON.stringify({message: e.message}))
-        } catch (e) {
-            console.error(`${body.method} response socket already closed!`)
-            res.end()
-        }
-    })
-}
-
 function handleProxyRequest(proxy, res, body) {
     proxy.on('proxyReq', function(proxyReq, req, res, options) {
         if(body !== '') {
@@ -41,4 +28,4 @@ function handleProxyRequest(proxy, res, body) {
     });
 }
 
-module.exports = { proxyRequest, proxyWebsocket, proxyRequestNoHandle, proxyWebsocketNoHandle, handleError, handleProxyRequest, proxyRequestToTarget }
+module.exports = { proxyRequest, proxyWebsocket, proxyRequestNoHandle, proxyWebsocketNoHandle, handleProxyRequest, proxyRequestToTarget }

@@ -46,17 +46,22 @@ async function checkRequestTime (blockNumber) {
 }
 
 async function refreshCashedBlockNumber() {
-    let host = process.env.PROXY_WEB_HOST ? process.env.PROXY_WEB_HOST : process.env.DEFAULT_WEB_HOST = "https://evmexplorer.velas.com/rpc"
+    try {
+        let host = process.env.PROXY_WEB_HOST ? process.env.PROXY_WEB_HOST : process.env.DEFAULT_WEB_HOST = "https://evmexplorer.velas.com/rpc"
 
-    let body = {
-        id: "1",
-        method: "eth_blockNumber",
-        jsonrpc: "2.0"
+        let body = {
+            id: "1",
+            method: "eth_blockNumber",
+            jsonrpc: "2.0"
+        }
+        require('axios').post(host, body).then(data => {
+            cashedBlockNumber = parseInt(data.data.result, 16);
+        })
+        body = null; host = null;
+    } catch (e) {
+        console.error(e.message)
     }
-    require('axios').post(host, body).then(data => {
-        cashedBlockNumber = parseInt(data.data.result, 16);
-    })
-    body = null; host = null;
+
 }
 
 async function getLogsFilter(filterObject) {

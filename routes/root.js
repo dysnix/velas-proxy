@@ -1,6 +1,7 @@
 'use strict'
 const bigTable = require('../utils/bigTableUtil.js');
 const proxyUtil = require('../utils/proxy');
+const { buildErrorJsonrpcObject } = require('../errorHandler.js');
 
 async function handleWeb(req, res, proxy, body) {
     try {
@@ -37,7 +38,7 @@ async function eth_getBlockByNumber (req, reply, proxy, body) {
             await mapDataFromBigTableOrProxyRequest(data, body, req, reply, proxy)
             id = null
         } else {
-            console.log(`${new Date()} web request proxied for ${body.params[0]}`)
+            console.log(`${new Date().getTime()} web request proxied for ${body.params[0]}`)
             await proxyUtil.proxyRequest(req, reply, proxy);
         }
     } catch (e) {
@@ -47,12 +48,12 @@ async function eth_getBlockByNumber (req, reply, proxy, body) {
 }
 
 async function eth_getBlockTransactionCountByHash (req, reply, proxy, body) {
-    console.log(`${new Date()} web request proxied for ${body.params[0]}`)
+    console.log(`${new Date().getTime()} web request proxied for ${body.params[0]}`)
     await proxyUtil.proxyRequestNoHandle(req, reply, proxy);
 }
 
 async function eth_getBlockTransactionCountByNumber (req, reply, proxy, body) {
-    console.log(`${new Date()} web request proxied for ${body.params[0]}`)
+    console.log(`${new Date().getTime()} web request proxied for ${body.params[0]}`)
     await proxyUtil.proxyRequestNoHandle(req, reply, proxy);
 }
 
@@ -71,7 +72,7 @@ async function eth_getLogs (req, reply, proxy, body) {
             });
             stream.destroy()
         } else {
-            console.log(`${new Date()} web request proxied start from ${body.params[0].fromBlock} end on ${body.params[0].toBlock }`)
+            console.log(`${new Date().getTime()} web request proxied start from ${body.params[0].fromBlock} end on ${body.params[0].toBlock }`)
             await proxyUtil.proxyRequestNoHandle(req, reply, proxy);
         }
     } catch (e) {
@@ -103,14 +104,5 @@ function mapResultToJsonrpcObject(result, id) {
         id: id
     }
 }
-
-function buildErrorJsonrpcObject(error, id) {
-    return {
-        jsonrpc: "2,0",
-        error: error,
-        id: id
-    }
-}
-
 
 module.exports = { handleWeb }

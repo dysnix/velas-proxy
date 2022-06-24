@@ -1,6 +1,7 @@
 'use strict'
 const bigTable = require('../utils/bigTableUtil')
 const proxyUtil = require("../utils/proxy");
+const { buildErrorJsonrpcObject } = require('../errorHandler.js');
 
 async function handleWS(body, message, request, socket, head, proxy) {
     switch (body.method) {
@@ -34,7 +35,7 @@ async function eth_getBlockByNumber (message, request, socket, head, proxy) {
             await mapDataFromBigTableOrProxyRequest(data, message, request, socket, head, proxy, connection);
             id = null;
         } else {
-            console.log(new Date() + ' web socket request proxied')
+            console.log(new Date().getTime() + ' web socket request proxied')
             await proxyUtil.proxyWebsocket(request, socket, head, proxy);
         }
     } catch (e) {
@@ -44,12 +45,12 @@ async function eth_getBlockByNumber (message, request, socket, head, proxy) {
 }
 
 async function eth_getBlockTransactionCountByHash (message, request, socket, head, proxy) {
-    console.log(new Date() + ' web socket request proxied')
+    console.log(new Date().getTime() + ' web socket request proxied')
     await proxyUtil.proxyWebsocketNoHandle(request, socket, head, proxy);
 }
 
 async function eth_getBlockTransactionCountByNumber (message, request, socket, head, proxy) {
-    console.log(new Date() + ' web socket request proxied')
+    console.log(new Date().getTime() + ' web socket request proxied')
     await proxyUtil.proxyWebsocketNoHandle(request, socket, head, proxy);
 }
 
@@ -69,7 +70,7 @@ async function eth_getLogs (message, request, socket, head, proxy) {
             });
             stream.destroy()
         } else {
-            console.log(new Date() + ' web socket request proxied')
+            console.log(new Date().getTime() + ' web socket request proxied')
             await proxyUtil.proxyWebsocketNoHandle(request, socket, head, proxy);
         }
     } catch (e) {
@@ -102,14 +103,5 @@ function mapResultToJsonrpcObject(result, id) {
         id: id
     }
 }
-
-function buildErrorJsonrpcObject(error, id) {
-    return {
-        jsonrpc: "2,0",
-        error: error,
-        id: id
-    }
-}
-
 
 module.exports = { handleWS }
