@@ -94,7 +94,6 @@ async function eth_getTxReceipt (req, reply, proxy, body) {
 async function mapDataFromBigTableOrProxyRequest(data, body, req, reply, proxy) {
     if(Object.entries(data).length !== 0) reply.end(JSON.stringify(mapResultToJsonrpcObject(data, body.id)));
     else await proxyUtil.proxyRequestToTarget(req, reply, proxy, process.env.PROXY_WEB_HOST ? process.env.PROXY_WEB_HOST : process.env.DEFAULT_WEB_HOST);
-    data = {} = null
 }
 
 function mapResultToJsonrpcObject(result, id) {
