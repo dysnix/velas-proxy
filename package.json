@@ -1,0 +1,37 @@
+{
+  "name": "velas-proxy",
+  "version": "1.0.0",
+  "description": "Velas proxy server",
+  "main": "app.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha 'test/**/*.test.js'",
+    "start": "node --max-old-space-size=2048 app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/bigtable": "^3.9.2",
+    "@xingrz/cppzst": "^2.1.0-alpha.8",
+    "axios": "^0.26.1",
+    "axios-mock-adapter": "^1.20.0",
+    "body-parser": "^1.19.2",
+    "bz2": "^1.0.1",
+    "chai": "^4.3.6",
+    "chai-http": "^4.3.0",
+    "dotenv": "^16.0.0",
+    "http": "^0.0.1-security",
+    "http-proxy": "^1.18.1",
+    "jest-mock": "^27.5.1",
+    "mocha": "^9.2.2",
+    "node-gzip": "^1.1.2",
+    "protobufjs": "^6.11.2",
+    "websocket": "^1.0.34"
+  },
+  "devDependencies": {
+    "tap": "^15.1.6"
+  }
+}
